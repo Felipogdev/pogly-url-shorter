@@ -1,0 +1,6 @@
+# Arquivos de ambiente
+.env
+*.env
+
+# Configurações do IntelliJ
+.idea/
