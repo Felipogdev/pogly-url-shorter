@@ -2,10 +2,14 @@ package com.pogly.shortener_service.services;
 
 import com.pogly.shortener_service.entities.UrlsEntity;
 import com.pogly.shortener_service.repositories.UrlRepository;
+import enums.TimeEnum;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.sql.Timestamp;
+import java.time.Instant;
 
 @Service
 public class UrlService {
@@ -33,16 +37,17 @@ public class UrlService {
                 .getSingleResult()).longValue();
 
         url.setId(nextId);
-        url.setShortUrlSlug(createShortnerSlug(nextId));
+        url.setShortUrlSlug(generateShortnerSlug(nextId));
         url.setLongUrl(longUrl);
+        url.setExpiresAt(Timestamp.from(Instant.now().plusSeconds(TimeEnum.FIVE_YEARS.getTime())));
 
         urlRepository.save(url);
 
-        return longUrl + url.getShortUrlSlug();
+        return baseUrl + "/" + url.getShortUrlSlug();
     }
 
 
-    private String createShortnerSlug(Long id) {
+    private String generateShortnerSlug(Long id) {
         StringBuilder slug = new StringBuilder();
 
         while (id > 0) {
