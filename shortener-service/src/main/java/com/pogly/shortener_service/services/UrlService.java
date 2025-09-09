@@ -2,7 +2,7 @@ package com.pogly.shortener_service.services;
 
 import com.pogly.shortener_service.entities.UrlsEntity;
 import com.pogly.shortener_service.repositories.UrlRepository;
-import enums.TimeEnum;
+import com.pogly.shortener_service.enums.TimeEnum;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Value;

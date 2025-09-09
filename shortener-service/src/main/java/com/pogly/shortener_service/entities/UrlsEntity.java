@@ -1,5 +1,6 @@
 package com.pogly.shortener_service.entities;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,5 +32,8 @@ public class UrlsEntity {
     private Timestamp expiresAt;
 
     private Long clicks = 0L;
+
+    @Column(name = "is_expired", nullable = false)
+    private boolean isExpired = false;
 
 }

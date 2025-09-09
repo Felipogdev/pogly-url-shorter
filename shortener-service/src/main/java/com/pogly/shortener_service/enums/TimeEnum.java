@@ -1,4 +1,4 @@
-package enums;
+package com.pogly.shortener_service.enums;
 
 public enum TimeEnum {
     FIVE_YEARS(157784630L);
