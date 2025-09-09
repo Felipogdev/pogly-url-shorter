@@ -2,6 +2,8 @@ package com.pogly.shortener_service.repositories;
 
 import com.pogly.shortener_service.entities.UrlsEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface UrlRepository extends JpaRepository<Long, UrlsEntity> {
+@Repository
+public interface UrlRepository extends JpaRepository<UrlsEntity, Long> {
 }
