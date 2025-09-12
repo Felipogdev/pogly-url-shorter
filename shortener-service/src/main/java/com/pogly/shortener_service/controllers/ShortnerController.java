@@ -2,7 +2,7 @@ package com.pogly.shortener_service.controllers;
 
 
 import com.pogly.shortener_service.dtos.RequestBodyDto;
-import com.pogly.shortener_service.services.UrlService;
+import com.pogly.shortener_service.services.ShortnerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,17 +10,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class MainController {
+public class ShortnerController {
 
-    private UrlService urlService;
+    private ShortnerService shortnerService;
 
-    MainController(UrlService urlService) {
-        this.urlService = urlService;
+    ShortnerController(ShortnerService shortnerService) {
+        this.shortnerService = shortnerService;
     }
 
     @GetMapping("/api/urls/duplicate")
     public ResponseEntity<?> seeDuplicates() {
-        return ResponseEntity.ok(urlService.hasDuplicateIds());
+        return ResponseEntity.ok(shortnerService.hasDuplicateIds());
     }
 
     @PostMapping("/api/urls/shorten")
@@ -28,7 +28,7 @@ public class MainController {
             @RequestBody RequestBodyDto dto
     ) {
         String longUrl = dto.longUrl();
-        return ResponseEntity.ok(urlService.createShortUrl(longUrl));
+        return ResponseEntity.ok(shortnerService.createShortUrl(longUrl));
     }
 
 }

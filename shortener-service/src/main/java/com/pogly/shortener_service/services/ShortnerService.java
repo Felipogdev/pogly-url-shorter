@@ -12,7 +12,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 
 @Service
-public class UrlService {
+public class ShortnerService {
 
     @Value("${BASE_URL}")
     private String baseUrl;
@@ -21,7 +21,7 @@ public class UrlService {
 
     private EntityManager entityManager;
 
-    UrlService(UrlRepository urlRepository, EntityManager entityManager) {
+    ShortnerService(UrlRepository urlRepository, EntityManager entityManager) {
         this.urlRepository = urlRepository;
         this.entityManager = entityManager;
     }
