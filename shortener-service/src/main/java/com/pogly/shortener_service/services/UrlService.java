@@ -4,7 +4,7 @@ import com.pogly.shortener_service.entities.UrlsEntity;
 import com.pogly.shortener_service.repositories.UrlRepository;
 import com.pogly.shortener_service.enums.TimeEnum;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -17,45 +17,39 @@ public class UrlService {
     @Value("${BASE_URL}")
     private String baseUrl;
 
-    @PersistenceContext
+    private final UrlRepository urlRepository;
+
     private EntityManager entityManager;
 
-    private UrlRepository urlRepository;
-
-    private static final String BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-
-    UrlService(UrlRepository urlRepository) {
+    UrlService(UrlRepository urlRepository, EntityManager entityManager) {
         this.urlRepository = urlRepository;
+        this.entityManager = entityManager;
     }
 
+    @Transactional
     public String createShortUrl(String longUrl) {
         UrlsEntity url = new UrlsEntity();
-
-        Long nextId = ((Number) entityManager
-                .createNativeQuery("SELECT nextval('url_seq')")
-                .getSingleResult()).longValue();
-
-        url.setId(nextId);
-        url.setShortUrlSlug(generateShortnerSlug(nextId));
         url.setLongUrl(longUrl);
-        url.setExpiresAt(Timestamp.from(Instant.now().plusSeconds(TimeEnum.FIVE_YEARS.getTime())));
+        url.setExpiresAt(Timestamp.from(
+                Instant.now().plusSeconds(TimeEnum.FIVE_YEARS.getTime())
+        ));
 
         urlRepository.save(url);
 
         return baseUrl + "/" + url.getShortUrlSlug();
     }
 
+    @Transactional
+    public boolean hasDuplicateIds() {
+        String sql = """
+        SELECT COUNT(id) - COUNT(DISTINCT id)
+        FROM urls
+    """;
 
-    private String generateShortnerSlug(Long id) {
-        StringBuilder slug = new StringBuilder();
+        Number duplicates = (Number) entityManager
+                .createNativeQuery(sql)
+                .getSingleResult();
 
-        while (id > 0) {
-            int remainder = (int)(id % 62);
-            slug.append(BASE62.charAt(remainder));
-            id /= 62;
-        }
-
-        return slug.reverse().toString();
+        return duplicates.longValue() > 0;
     }
 }

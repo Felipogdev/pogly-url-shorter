@@ -15,6 +15,7 @@ import java.sql.Timestamp;
 public class UrlsEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "url_seq")
     @SequenceGenerator(name = "url_seq", sequenceName = "url_seq", allocationSize = 1)
     private Long id;
 
@@ -35,5 +36,24 @@ public class UrlsEntity {
 
     @Column(name = "is_expired", nullable = false)
     private boolean isExpired = false;
+
+    @PrePersist
+    public void prePersist() {
+        if (shortUrlSlug == null && id != null) {
+            shortUrlSlug = generateShortnerSlug(id);
+        }
+    }
+
+    private String generateShortnerSlug(Long id) {
+        String base62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        StringBuilder slug = new StringBuilder();
+        while (id > 0) {
+            int remainder = (int) (id % 62);
+            slug.append(base62.charAt(remainder));
+            id /= 62;
+        }
+        return slug.reverse().toString();
+    }
+
 
 }
