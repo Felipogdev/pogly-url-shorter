@@ -42,9 +42,9 @@ public class ShortnerService {
     @Transactional
     public boolean hasDuplicateIds() {
         String sql = """
-        SELECT COUNT(id) - COUNT(DISTINCT id)
-        FROM urls
-    """;
+                    SELECT COUNT(id) - COUNT(DISTINCT id)
+                    FROM urls
+                """;
 
         Number duplicates = (Number) entityManager
                 .createNativeQuery(sql)

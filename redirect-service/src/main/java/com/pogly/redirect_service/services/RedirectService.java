@@ -1,8 +1,9 @@
 package com.pogly.redirect_service.services;
 
-import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 @Service
 public class RedirectService {
@@ -10,22 +11,15 @@ public class RedirectService {
     @Value("${BASE_URL}")
     private String baseUrl;
 
-    private final EntityManager entityManager;
+    private final DatabaseClient databaseClient;
 
-    public RedirectService(EntityManager entityManager) {
-        this.entityManager = entityManager;
+    public RedirectService(DatabaseClient databaseClient) {
+        this.databaseClient = databaseClient;
     }
 
-    public String redirectUrl(String slug) {
+    public Mono<String> redirectUrl(String slug) {
         Long id = decodeSlugToId(slug);
-
-        String sql = "SELECT long_url FROM urls WHERE id = :id";
-
-        Object result = entityManager.createNativeQuery(sql)
-                .setParameter("id", id)
-                .getSingleResult();
-
-        return result != null ? result.toString() : null;
+        return fetchUrl(id);
     }
 
     private Long decodeSlugToId(String slug) {
@@ -34,9 +28,23 @@ public class RedirectService {
         for (int i = 0; i < slug.length(); i++) {
             char c = slug.charAt(i);
             int value = base62.indexOf(c);
-            if (value == -1) throw new IllegalArgumentException("Caractere inválido no slug");
+            if (value == -1) throw new IllegalArgumentException("Invalid slug character");
             id = id * 62 + value;
         }
         return id;
+    }
+
+    private Mono<String> fetchUrl(Long id) {
+        return incrementClickColumn(id)
+                .then(databaseClient.sql("SELECT long_url FROM urls WHERE id = :id")
+                        .bind("id", id)
+                        .map(row -> row.get("long_url", String.class))
+                        .one());
+    }
+
+    private Mono<Void> incrementClickColumn(Long id) {
+        return databaseClient.sql("UPDATE urls SET clicks = clicks + 1 WHERE id = :id")
+                .bind("id", id)
+                .then();
     }
 }

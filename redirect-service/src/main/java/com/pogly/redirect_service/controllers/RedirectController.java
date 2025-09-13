@@ -17,15 +17,11 @@ public class RedirectController {
     }
 
     @GetMapping("/{slug}")
-    public Mono<ResponseEntity<Void>> redirect(@PathVariable String slug) {
-        return Mono.fromCallable(() -> {
-            String longUrl = redirectService.redirectUrl(slug);
-            if (longUrl == null) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.status(HttpStatus.FOUND)
-                    .header("Location", longUrl)
-                    .build();
-        });
+    public Mono<ResponseEntity<Object>> redirect(@PathVariable String slug) {
+        return redirectService.redirectUrl(slug)
+                .map(longUrl -> ResponseEntity.status(HttpStatus.FOUND)
+                        .header("Location", longUrl)
+                        .build())
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }
