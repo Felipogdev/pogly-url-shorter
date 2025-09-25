@@ -1,6 +1,7 @@
 package com.pogly.redirect_service.services;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -12,9 +13,11 @@ public class RedirectService {
     private String baseUrl;
 
     private final DatabaseClient databaseClient;
+    private final ReactiveStringRedisTemplate reactiveStringRedisTemplate;
 
-    public RedirectService(DatabaseClient databaseClient) {
+    public RedirectService(DatabaseClient databaseClient, ReactiveStringRedisTemplate reactiveStringRedisTemplate) {
         this.databaseClient = databaseClient;
+        this.reactiveStringRedisTemplate = reactiveStringRedisTemplate;
     }
 
     public Mono<String> redirectUrl(String slug) {
@@ -35,11 +38,27 @@ public class RedirectService {
     }
 
     private Mono<String> fetchUrl(Long id) {
-        return incrementClickColumn(id)
-                .then(databaseClient.sql("SELECT long_url FROM urls WHERE id = :id")
-                        .bind("id", id)
-                        .map(row -> row.get("long_url", String.class))
-                        .one());
+        return getUrlFromCacheOrDb(id);
+    }
+
+    private Mono<String> getUrlFromCacheOrDb(Long id) {
+        String key = "url:" + id;
+
+        return reactiveStringRedisTemplate.opsForValue().get(key)
+                .flatMap(url ->
+                        incrementClickColumn(id).thenReturn(url)
+                )
+                .switchIfEmpty(
+                        databaseClient.sql("SELECT long_url FROM urls WHERE id = :id")
+                                .bind("id", id)
+                                .map(row -> row.get("long_url", String.class))
+                                .one()
+                                .flatMap(url ->
+                                        reactiveStringRedisTemplate.opsForValue().set(key, url)
+                                                .then(incrementClickColumn(id))
+                                                .thenReturn(url)
+                                )
+                );
     }
 
     private Mono<Void> incrementClickColumn(Long id) {
