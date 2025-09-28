@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.time.Instant;
 
+//TODO: Checar a url é segura antes de encurtar ela, para não salvar sites maliciosos. Provavelmente usar a API Do Google de safe browsing
 @Service
 public class ShortnerService {
 
@@ -52,4 +53,5 @@ public class ShortnerService {
 
         return duplicates.longValue() > 0;
     }
+
 }

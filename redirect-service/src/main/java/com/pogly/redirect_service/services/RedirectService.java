@@ -62,7 +62,7 @@ public class RedirectService {
     }
 
     private Mono<Void> incrementClickColumn(Long id) {
-        return databaseClient.sql("UPDATE urls SET clicks = clicks + 1 WHERE id = :id")
+            return databaseClient.sql("UPDATE urls SET clicks = clicks + 1 WHERE id = :id")
                 .bind("id", id)
                 .then();
     }
